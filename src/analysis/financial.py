@@ -83,18 +83,18 @@ class FinancialAnalyzer:
         return solvency
 
     def get_efficiency_metrics(self):
-        """Logic for Tab 7: Asset and Working Capital utilization."""
-        efficiency = pd.DataFrame(index=self.df.index)
-        
-        sales = self.safe_get('Sales')
-        total_assets = self.safe_get('Total Assets')
-        receivables = self.safe_get('Trade Receivables')
-        inventory = self.safe_get('Inventory')
-        
-        efficiency['Asset Turnover'] = sales / total_assets.replace(0, np.nan)
-        
-        # Working Capital Cycle components
-        efficiency['Debtor Days'] = (receivables / sales.replace(0, np.nan)) * 365
-        efficiency['Inventory Turnover'] = sales / inventory.replace(0, np.nan)
-        
-        return efficiency
+    """Calculates Asset Turnover and Working Capital Cycles."""
+    eff = pd.DataFrame(index=self.df.index)
+    eff['Year'] = self.df['Report Date']
+    
+    sales = self.safe_get('Sales')
+    assets = self.safe_get('Total Assets')
+    inventory = self.safe_get('Inventory')
+    debtors = self.safe_get('Trade Receivables')
+    
+    # Ratios
+    eff['Asset Turnover'] = sales / assets.replace(0, np.nan)
+    eff['Inventory Turnover'] = sales / inventory.replace(0, np.nan)
+    eff['Debtor Days'] = (debtors / sales.replace(0, np.nan)) * 365
+    
+    return eff
