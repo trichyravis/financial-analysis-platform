@@ -1,18 +1,70 @@
 
-[theme]
-primaryColor = "#FFD700"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#002147"
-font = "sans serif"
+"""
+config.py - Centralized Configuration for The Mountain Path
+Centralizes branding, colors, and financial assumptions.
+"""
 
-[server]
-port = 8501
-enableCORS = false
-headless = true
+# =============================================================================
+# BRANDING & IDENTITY
+# =============================================================================
+COMPANY_NAME = "The Mountain Path"
+TAGLINE = "World of Finance"
+AUTHOR = "Prof. V. Ravichandran"
+AUTHOR_CREDENTIALS = "28+ Years Corporate Finance & Banking | 10+ Years Academic Excellence"
+PLATFORM_NAME = "Advanced Financial Analysis Platform"
 
-[browser]
-gatherUsageStats = false
+# =============================================================================
+# UI COLOR PALETTE (MOUNTAIN PATH THEME)
+# =============================================================================
+COLORS = {
+    "primary_dark": "#002147",      # Deep Navy Blue for Headers/Sidebar
+    "primary_light": "#004b8d",     # Lighter Blue for Gradients
+    "accent_gold": "#FFD700",       # Gold for Borders and Highlights
+    "success_green": "#28a745",
+    "warning_amber": "#ffc107",
+    "danger_red": "#dc3545",
+    "background_grey": "#f8f9fa",
+    "white": "#FFFFFF"
+}
 
-[client]
-showErrorDetails = false
+# =============================================================================
+# FINANCIAL ASSUMPTIONS (DEFAULTS)
+# =============================================================================
+FINANCIAL_DEFAULTS = {
+    "risk_free_rate": 0.07,         # 7.0% (Common for Indian Markets)
+    "market_return": 0.12,          # 12.0%
+    "terminal_growth": 0.04,        # 4.0%
+    "tax_rate": 0.25,               # 25% Standard Corporate Tax
+    "wacc_default": 0.10            # 10% 
+}
+
+# =============================================================================
+# LAYOUT & NAVIGATION
+# =============================================================================
+TABS_LIST = [
+    "📊 Dashboard", 
+    "📈 Financials", 
+    "📉 Profitability", 
+    "🎯 DCF Valuation", 
+    "💎 EVA Analysis", 
+    "⚖️ Solvency", 
+    "⚡ Efficiency", 
+    "📈 Growth Analysis", 
+    "🏦 Shareholding", 
+    "🛡️ Risk Metrics", 
+    "💹 Peers", 
+    "📝 Summary"
+]
+
+# =============================================================================
+# DATA PARSING KEYWORDS (For Screener.in Loader)
+# =============================================================================
+# Used to find sections even if Screener changes row numbers
+KEYWORDS = {
+    "PL_SECTION": ["Profit & Loss", "P&L"],
+    "BS_SECTION": ["Balance Sheet"],
+    "CF_SECTION": ["Cash Flow"],
+    "REVENUE": ["Sales", "Revenue", "Turnover"],
+    "NET_PROFIT": ["Net Profit", "PAT", "Profit after tax"],
+    "INTEREST": ["Interest", "Finance Costs"]
+}
