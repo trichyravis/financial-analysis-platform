@@ -49,10 +49,7 @@ TABS = [
     "⚖️ Solvency",       # Tab 5
     "⚡ Efficiency",     # Tab 6
     "🚀 Growth",         # Tab 7
-    "🏦 Shareholding",   # Tab 8
-    "🛡️ Risk Metrics",   # Tab 9
-    "💹 Peers",          # Tab 10
-    "📝 Thesis"          # Tab 11
+    "📝 Thesis"  #Tab 8
 ]
 
 # =============================================================================
