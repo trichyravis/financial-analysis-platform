@@ -1,19 +1,21 @@
 
 import streamlit as st
-import pandas as pd
 from src.analysis.growth import GrowthAnalyzer
 
 def render_growth_tab(data):
-    st.subheader("📈 Compounded Growth Analysis")
-    
+    st.subheader("🚀 Growth Momentum")
     analyzer = GrowthAnalyzer(data)
     growth_df = analyzer.get_growth_summary()
+
+    # CAGR Summary Cards
+    c1, c2, c3 = st.columns(3)
+    c1.metric("3Y Sales CAGR", f"{growth_df.loc['Sales', '3Y CAGR']:.2f}%")
+    c2.metric("5Y Sales CAGR", f"{growth_df.loc['Sales', '5Y CAGR']:.2f}%")
+    c3.metric("10Y Sales CAGR", f"{growth_df.loc['Sales', '10Y CAGR']:.2f}%")
+
+    st.divider()
     
-    if not growth_df.empty:
-        st.write("#### CAGR Performance (%)")
-        st.table(growth_df.style.format("{:.2f}%", na_rep="-"))
-        
-        st.write("#### Growth Visualizer")
-        st.line_chart(data.set_index('Report Date')[['Sales', 'Net Profit']])
-    else:
-        st.warning("Insufficient historical data to calculate CAGR.")
+    # Historical Sales & Profit Growth
+    st.write("#### Revenue vs. Profit Growth (YoY)")
+    growth_plot = data.set_index('Report Date')[['Sales', 'Net Profit']].pct_change() * 100
+    st.line_chart(growth_plot)
