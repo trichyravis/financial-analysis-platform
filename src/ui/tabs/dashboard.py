@@ -1,26 +1,61 @@
 
 import streamlit as st
-from src.analysis.financial import FinancialAnalyzer
 
-def render_dashboard(data, meta):
-    st.subheader("📊 Executive Dashboard")
-    
-    # Metadata Row (Branded)
-    m1, m2, m3 = st.columns(3)
-    with m1: st.metric("Market Cap", f"₹{meta.get('Market Cap', 0):,.0f} Cr")
-    with m2: st.metric("Current Price", f"₹{meta.get('Current Price', 0):,.2f}")
-    with m3: st.metric("Total Shares", f"{meta.get('Total Shares', 0):,.2f} Cr")
+def apply_custom_css():
+    st.markdown("""
+        <style>
+            /* 1. MAIN HEADER: THE MOUNTAIN PATH */
+            .main-header h1 {
+                color: #FFD700 !important; /* PURE GOLD */
+                font-size: 3.5rem !important;
+                font-weight: 900 !important;
+                text-shadow: 3px 3px 5px #000000 !important; /* Hard shadow for depth */
+                letter-spacing: 1px;
+            }
 
-    st.divider()
-    
-    analyzer = FinancialAnalyzer(data)
-    prof = analyzer.get_profitability_metrics().iloc[-1]
-    
-    # 🏔️ Institutional Metric Display
-    cols = st.columns(4)
-    cols[0].metric("ROE %", f"{prof.get('ROE %', 0):.2f}%")
-    cols[1].metric("Net Margin %", f"{prof.get('Net Margin %', 0):.2f}%")
-    cols[2].metric("Sales Growth (YoY)", f"{data['Sales'].pct_change().iloc[-1]*100:.1f}%")
-    cols[3].metric("Debt/Equity", f"{(data['Borrowings']/ (data['Equity Share Capital']+data['Reserves'])).iloc[-1]:.2f}x")
+            /* 2. SIDEBAR: PURE BLACK TEXT ON WHITE BOX */
+            [data-testid="stSidebar"] {
+                background-color: #002b5b !important; /* Deep Navy */
+            }
+            
+            /* File Uploader Box */
+            [data-testid="stFileUploadDropzone"] {
+                background-color: #FFFFFF !important; /* Pure White background */
+                border: 2px solid #FFD700 !important;
+            }
+            
+            /* Drag and Drop / Limit 200MB text */
+            [data-testid="stFileUploadDropzone"] * {
+                color: #000000 !important; /* FORCED PURE BLACK */
+                font-weight: 800 !important;
+            }
 
-    st.line_chart(data.set_index('Report Date')[['Sales', 'Net Profit']])
+            /* 3. SIDEBAR SLIDER CONTRAST */
+            [data-testid="stSidebar"] .stMarkdown p, 
+            [data-testid="stSidebar"] label {
+                color: #FFFFFF !important; /* PURE WHITE labels */
+                font-weight: bold !important;
+                font-size: 1.1rem !important;
+            }
+            
+            /* Slider Numbers (5.0, 25.0) */
+            [data-testid="stTickBar"] span {
+                color: #FFFFFF !important;
+                font-weight: 900 !important;
+            }
+
+            /* 4. FIXED FOOTER */
+            .footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                background-color: #002b5b !important;
+                color: #FFD700 !important;
+                border-top: 3px solid #FFD700;
+                text-align: center;
+                padding: 10px;
+                font-weight: bold;
+                z-index: 1000;
+            }
+        </style>
+    """, unsafe_allow_html=True)
