@@ -4,56 +4,54 @@ import streamlit as st
 def apply_custom_css():
     st.markdown("""
         <style>
-            /* 1. MAIN HEADER: THE MOUNTAIN PATH */
+            /* 1. FORCE THE MOUNTAIN PATH TITLE TO BRIGHT GOLD */
             .main-header h1 {
-                color: #FFD700 !important; /* PURE GOLD */
-                font-size: 3.5rem !important;
+                color: #FFD700 !important; /* Pure Vivid Gold */
+                font-size: 3.8rem !important; /* Larger for impact */
                 font-weight: 900 !important;
-                text-shadow: 3px 3px 5px #000000 !important; /* Hard shadow for depth */
-                letter-spacing: 1px;
+                text-shadow: 4px 4px 0px #000000 !important; /* Thick black shadow */
+                margin-bottom: 0 !important;
+            }
+            .main-header p {
+                color: #FFFFFF !important; /* Pure white subtitle */
+                font-size: 1.2rem;
             }
 
-            /* 2. SIDEBAR: PURE BLACK TEXT ON WHITE BOX */
+            /* 2. SIDEBAR FILE UPLOADER CONTRAST */
             [data-testid="stSidebar"] {
-                background-color: #002b5b !important; /* Deep Navy */
+                background-color: #001f3f !important; /* Deep Midnight Navy */
             }
             
-            /* File Uploader Box */
+            /* File Uploader Box: White Background for Black Text */
             [data-testid="stFileUploadDropzone"] {
-                background-color: #FFFFFF !important; /* Pure White background */
-                border: 2px solid #FFD700 !important;
+                background-color: #FFFFFF !important;
+                border: 3px solid #FFD700 !important; /* Gold border */
             }
             
-            /* Drag and Drop / Limit 200MB text */
+            /* The "Drag and Drop" and "Limit 200MB" text forced to BLACK */
             [data-testid="stFileUploadDropzone"] * {
-                color: #000000 !important; /* FORCED PURE BLACK */
-                font-weight: 800 !important;
-            }
-
-            /* 3. SIDEBAR SLIDER CONTRAST */
-            [data-testid="stSidebar"] .stMarkdown p, 
-            [data-testid="stSidebar"] label {
-                color: #FFFFFF !important; /* PURE WHITE labels */
-                font-weight: bold !important;
-                font-size: 1.1rem !important;
-            }
-            
-            /* Slider Numbers (5.0, 25.0) */
-            [data-testid="stTickBar"] span {
-                color: #FFFFFF !important;
+                color: #000000 !important; 
                 font-weight: 900 !important;
+                font-size: 1rem !important;
             }
 
-            /* 4. FIXED FOOTER */
+            /* 3. SIDEBAR LABELS (WACC, Tax Rate, etc) */
+            section[data-testid="stSidebar"] label p {
+                color: #FFFFFF !important; /* High contrast White */
+                font-size: 1.15rem !important;
+                font-weight: bold !important;
+            }
+
+            /* 4. FOOTER: GOLD ON NAVY */
             .footer {
                 position: fixed;
                 bottom: 0;
                 width: 100%;
-                background-color: #002b5b !important;
+                background-color: #001f3f !important;
                 color: #FFD700 !important;
-                border-top: 3px solid #FFD700;
                 text-align: center;
-                padding: 10px;
+                padding: 12px;
+                border-top: 4px solid #FFD700;
                 font-weight: bold;
                 z-index: 1000;
             }
