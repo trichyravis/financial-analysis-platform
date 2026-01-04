@@ -5,75 +5,50 @@ from src.core.config import COLORS
 def apply_custom_css():
     st.markdown(f"""
         <style>
-            /* 1. GLOBAL SIDEBAR OVERRIDE */
-            /* Forces the Navy Blue background and sets a base white color */
-            section[data-testid="stSidebar"] {{
-                background-color: {COLORS['primary_dark']} !important;
-                color: #FFFFFF !important;
+            /* 1. MAIN HEADER TEXT VISIBILITY */
+            .main-header h1 {{
+                color: {COLORS['accent_gold']} !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Adds depth for visibility */
+                font-weight: 800 !important;
+                margin: 0 !important;
             }}
-
-            /* 2. FORCE TEXT COLORS FOR ALL SIDEBAR ELEMENTS */
-            /* This ensures Headers, Labels, and normal text are always White */
-            section[data-testid="stSidebar"] h1, 
-            section[data-testid="stSidebar"] h2, 
-            section[data-testid="stSidebar"] h3, 
-            section[data-testid="stSidebar"] label, 
-            section[data-testid="stSidebar"] p, 
-            section[data-testid="stSidebar"] span {{
+            .main-header p {{
                 color: #FFFFFF !important;
                 font-weight: 500 !important;
             }}
 
-            /* 3. FILE UPLOADER CONTRAST FIX */
-            /* We make the box white so the black text inside it stands out */
+            /* 2. SIDEBAR FILE UPLOADER VISIBILITY */
+            /* We force the dropzone box to be White so Black text inside is clear */
             [data-testid="stFileUploadDropzone"] {{
                 background-color: #FFFFFF !important;
                 border: 2px dashed {COLORS['accent_gold']} !important;
+                padding: 10px !important;
             }}
             
-            /* Forces the "Drag and drop", "Browse files", and "Limit" text to BLACK */
+            /* Target 'Drag and drop', 'Limit 200MB', and 'XLSX' text */
             [data-testid="stFileUploadDropzone"] * {{
-                color: #000000 !important;
-            }}
-
-            /* 4. SLIDER VISIBILITY */
-            /* Ensures the slider numbers and labels at the ends (5.0, 25.0) are White */
-            [data-testid="stSidebar"] [data-testid="stTickBarMin"],
-            [data-testid="stSidebar"] [data-testid="stTickBarMax"],
-            [data-testid="stSidebar"] [data-testid="stSliderTick"] {{
-                color: #FFFFFF !important;
+                color: #000000 !important; /* FORCED BLACK */
+                font-family: sans-serif !important;
             }}
             
-            /* Changes the Slider handle to Gold for branding */
-            [data-testid="stSidebar"] .st-eb {{
-                background-color: {COLORS['accent_gold']} !important;
+            /* Target the small 'Limit' text specifically */
+            [data-testid="stFileUploadDropzone"] small {{
+                color: #444444 !important;
+                font-weight: bold !important;
             }}
 
-            /* 5. HEADER & FOOTER (Matches your previous design) */
-            [data-testid="stHeader"] {{
+            /* 3. SIDEBAR BRANDING TITLE (The Mountain Path in Sidebar) */
+            [data-testid="stSidebarNav"] {{
                 background-color: {COLORS['primary_dark']} !important;
             }}
-            
-            .main-header {{
-                background-color: {COLORS['primary_dark']};
-                padding: 1.5rem;
-                border-radius: 8px;
-                border-left: 10px solid {COLORS['accent_gold']};
-                margin-bottom: 2rem;
+            section[data-testid="stSidebar"] .stMarkdown h1 {{
+                color: #FFFFFF !important;
+                padding-top: 20px;
             }}
-            
-            .footer {{
-                position: fixed;
-                left: 0;
-                bottom: 0;
-                width: 100%;
-                background-color: {COLORS['primary_dark']};
-                color: white;
-                text-align: center;
-                padding: 10px;
-                font-size: 0.8rem;
-                border-top: 2px solid {COLORS['accent_gold']};
-                z-index: 999;
+
+            /* 4. SYSTEM HEADER OVERRIDE */
+            header[data-testid="stHeader"] {{
+                background-color: {COLORS['primary_dark']} !important;
             }}
         </style>
     """, unsafe_allow_html=True)
