@@ -1,31 +1,34 @@
 
-import pandas as pd
 import numpy as np
 
-def calculate_dcf(latest_fcf, growth_rate, wacc, terminal_growth, projection_years=5):
-    """Calculates Intrinsic Value using 2-stage DCF model."""
-    forecast_fcf = []
-    current_fcf = latest_fcf
-    
-    # Stage 1: Growth Phase
-    for i in range(projection_years):
-        current_fcf *= (1 + growth_rate)
-        forecast_fcf.append(current_fcf)
+def calculate_dcf(fcf, growth_rate, wacc, terminal_growth):
+    """
+    Calculates 2-Stage DCF with safety guardrails.
+    """
+    # 1. DENOMINATOR SAFETY CHECK
+    # Terminal growth must be strictly less than WACC
+    if wacc <= terminal_growth:
+        # Fallback: Cap terminal growth at WACC - 2% to prevent negative infinity
+        terminal_growth = max(0, wacc - 0.02)
         
-    # Stage 2: Terminal Value
-    terminal_value = (forecast_fcf[-1] * (1 + terminal_growth)) / (wacc - terminal_growth)
+    # 2. STAGE 1: 5-YEAR PROJECTION
+    projections = []
+    current_fcf = fcf
+    for i in range(1, 6):
+        current_fcf *= (1 + growth_rate)
+        discounted_fcf = current_fcf / ((1 + wacc) ** i)
+        projections.append(discounted_fcf)
     
-    # Discounting
-    pv_fcf = sum([fcf / (1 + wacc)**(i+1) for i, fcf in enumerate(forecast_fcf)])
-    pv_terminal = terminal_value / (1 + wacc)**projection_years
+    pv_explicit_period = sum(projections)
     
-    return pv_fcf + pv_terminal
-
-def get_sensitivity_matrix(fcf, growth_range, wacc_range, terminal_growth):
-    """Generates data for a heat map of valuations."""
-    matrix = np.zeros((len(wacc_range), len(growth_range)))
-    for i, w in enumerate(wacc_range):
-        for j, g in enumerate(growth_range):
-            matrix[i, j] = calculate_dcf(fcf, g, w, terminal_growth)
-    return pd.DataFrame(matrix, index=[f"{w*100:.1f}%" for w in wacc_range], 
-                        columns=[f"{g*100:.1f}%" for g in growth_range])
+    # 3. STAGE 2: TERMINAL VALUE
+    fcf_year_5 = current_fcf
+    # Gordon Growth Formula
+    terminal_value = (fcf_year_5 * (1 + terminal_growth)) / (wacc - terminal_growth)
+    pv_terminal_value = terminal_value / ((1 + wacc) ** 5)
+    
+    # 4. TOTAL INTRINSIC VALUE
+    intrinsic_value = pv_explicit_period + pv_terminal_value
+    
+    # Final Floor: Intrinsic value cannot be negative in a professional model
+    return max(0, intrinsic_value)
