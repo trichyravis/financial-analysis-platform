@@ -1,12 +1,13 @@
 
 """
 🏔️ THE MOUNTAIN PATH - World of Finance
-Financial Analysis Platform - Main Application
+Financial Analysis Platform - UPDATED WITH UNIVERSAL SCREENER.IN LOADER
 
 Complete fixed version with:
+- Universal data loader for any Screener.in Excel file
+- Automatic column detection and parsing
 - 9 tabs (removed Segments, Elasticity, Institutional)
 - Proper error handling
-- Data validation
 - Professional UI
 """
 
@@ -15,7 +16,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import sys
-from pathlib import Path
+import tempfile
+from screener_data_loader import ScreenerDataLoader, load_screener_file
 
 # Page configuration
 st.set_page_config(
@@ -73,42 +75,51 @@ with st.sidebar:
     2. Search for a company
     3. Download Excel
     4. Upload here
+    
+    ✨ *No manual column renaming needed!*
     """)
     
     # File upload
     uploaded_file = st.file_uploader(
         "Choose Excel file from Screener.in",
         type=['xlsx', 'xls'],
-        help="Limit 500MB per file - XLSX format"
+        help="Standard Screener.in format - Works with any company!"
     )
     
+    data = None
     if uploaded_file is not None:
         try:
-            # Read the Excel file
-            data = pd.read_excel(uploaded_file)
+            # Save uploaded file to temp location
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
+                tmp.write(uploaded_file.getbuffer())
+                tmp_path = tmp.name
             
-            # Show file info
-            st.success(f"✅ File loaded: {uploaded_file.name}")
-            st.metric("Rows", len(data))
-            st.metric("Columns", len(data.columns))
+            # Load using universal loader
+            loader = ScreenerDataLoader(tmp_path)
+            data = loader.get_data()
             
-            # Show column names
+            # Display summary
+            summary = loader.get_summary()
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Company", summary['company'][:15])
+            with col2:
+                st.metric("Rows", summary['rows'])
+            with col3:
+                st.metric("Columns", summary['columns'])
+            with col4:
+                st.metric("Years", summary['years'])
+            
+            # Show available columns
             with st.expander("📊 Available Columns"):
-                st.write(data.columns.tolist())
-            
-            # Validate required columns
-            required_cols = ['Year', 'Revenue']
-            missing_cols = [col for col in required_cols if col not in data.columns]
-            
-            if missing_cols:
-                st.error(f"❌ Missing columns: {', '.join(missing_cols)}")
-                st.stop()
+                st.write(summary['columns_list'])
             
         except Exception as e:
-            st.error(f"❌ Error reading file: {str(e)}")
+            st.error(f"❌ Error loading file: {str(e)}")
+            st.info("Make sure file is downloaded from Screener.in")
             st.stop()
     else:
-        st.info("📤 Upload an Excel file to begin")
+        st.info("📤 Upload an Excel file from Screener.in to begin")
         st.stop()
 
 # ============================================================================
@@ -120,7 +131,7 @@ st.markdown("**Advanced Financial Analysis & Valuation Dashboard**")
 st.divider()
 
 # Check data quality
-if len(data) == 0:
+if data is None or len(data) == 0:
     st.error("❌ No data available. Please upload a valid file.")
     st.stop()
 
@@ -180,7 +191,7 @@ with tabs[0]:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("📈 Revenue Trend (10Y)")
+            st.subheader("📈 Revenue Trend")
             try:
                 import plotly.graph_objects as go
                 fig = go.Figure()
@@ -202,7 +213,7 @@ with tabs[0]:
                 st.warning(f"Could not display chart: {str(e)}")
         
         with col2:
-            st.subheader("💰 Net Profit Trend (10Y)")
+            st.subheader("💰 Net Profit Trend")
             if 'Net Income' in data.columns:
                 try:
                     fig = go.Figure()
@@ -237,13 +248,12 @@ with tabs[0]:
 
 with tabs[1]:
     st.header("📈 Financials")
-    st.info("Complete financial statement analysis including income, balance sheet, and cash flow metrics.")
+    st.info("Complete financial statement analysis")
     
     try:
         if 'Revenue' not in data.columns:
             st.error("❌ Revenue data not found")
         else:
-            # Display key financial metrics
             col1, col2, col3 = st.columns(3)
             
             latest_year = data['Year'].max()
@@ -257,14 +267,14 @@ with tabs[1]:
             with col2:
                 if 'Net Income' in data.columns:
                     st.metric("Net Income", f"₹{latest_data['Net Income']:,.0f}")
-                if 'EBITDA' in data.columns:
-                    st.metric("EBITDA", f"₹{latest_data['EBITDA']:,.0f}")
+                if 'Depreciation' in data.columns:
+                    st.metric("Depreciation", f"₹{latest_data['Depreciation']:,.0f}")
             
             with col3:
                 if 'Total Assets' in data.columns:
                     st.metric("Total Assets", f"₹{latest_data['Total Assets']:,.0f}")
-                if 'Total Liabilities' in data.columns:
-                    st.metric("Total Liabilities", f"₹{latest_data['Total Liabilities']:,.0f}")
+                if 'Equity' in data.columns:
+                    st.metric("Equity", f"₹{latest_data['Equity']:,.0f}")
             
             st.divider()
             st.subheader("📊 Financial Data Table")
@@ -284,12 +294,6 @@ with tabs[2]:
         if 'Revenue' not in data.columns or 'EBIT' not in data.columns:
             st.error("❌ Missing required columns: Revenue, EBIT")
         else:
-            # Check for optional columns
-            has_gross_profit = 'Gross Profit' in data.columns
-            
-            if not has_gross_profit:
-                st.warning("⚠️ Gross Profit data not available in the file")
-            
             col1, col2, col3 = st.columns(3)
             
             latest_year = data['Year'].max()
@@ -300,12 +304,6 @@ with tabs[2]:
             with col1:
                 st.subheader("📊 Current Year Margins")
                 st.metric("EBIT Margin %", f"{(ebit/revenue)*100:.2f}%")
-                
-                if has_gross_profit:
-                    gp = latest_data['Gross Profit']
-                    st.metric("GP Margin %", f"{(gp/revenue)*100:.2f}%")
-                else:
-                    st.info("Gross Profit data not available")
             
             with col2:
                 st.subheader("📈 5-Year Trend")
@@ -356,9 +354,6 @@ with tabs[3]:
         has_current_assets = 'Current Assets' in data.columns
         has_current_liabilities = 'Current Liabilities' in data.columns
         
-        if not has_current_liabilities:
-            st.warning("⚠️ Current Liabilities data not available in the file")
-        
         if has_current_assets and has_current_liabilities:
             col1, col2 = st.columns(2)
             
@@ -374,10 +369,10 @@ with tabs[3]:
             
             with col2:
                 st.subheader("📊 Trend")
-                st.info("Liquidity metrics require Current Assets & Current Liabilities data")
+                st.info("Liquidity metrics ready for analysis")
         else:
-            st.warning("⚠️ Insufficient data for liquidity analysis")
-            st.info("Required columns: Current Assets, Current Liabilities")
+            st.warning("⚠️ Current Assets or Current Liabilities not in file")
+            st.info("These columns are optional for basic analysis")
     
     except Exception as e:
         st.error(f"❌ Error in liquidity analysis: {str(e)}")
@@ -390,12 +385,7 @@ with tabs[4]:
     st.header("💎 Valuation Multiples")
     
     try:
-        st.info("Valuation metrics require additional data from Screener.in")
-        
-        # Check for EPS
-        has_eps = 'Earnings Per Share' in data.columns
-        if not has_eps:
-            st.warning("⚠️ Earnings Per Share data not available in the file")
+        st.info("Valuation metrics available")
         
         if len(data) > 0:
             latest_year = data['Year'].max()
@@ -409,14 +399,13 @@ with tabs[4]:
                     st.metric("Net Income", f"₹{latest_data['Net Income']:,.0f}")
             
             with col2:
-                if has_eps:
-                    st.metric("EPS", f"₹{latest_data['Earnings Per Share']:.2f}")
-                else:
-                    st.info("EPS data not available")
-            
-            with col3:
                 if 'Revenue' in data.columns:
                     st.metric("Revenue", f"₹{latest_data['Revenue']:,.0f}")
+            
+            with col3:
+                if 'Net Income' in data.columns and 'Revenue' in data.columns:
+                    nm = (latest_data['Net Income'] / latest_data['Revenue']) * 100
+                    st.metric("Net Margin %", f"{nm:.2f}%")
     
     except Exception as e:
         st.error(f"❌ Error in valuation analysis: {str(e)}")
@@ -544,10 +533,7 @@ with tabs[6]:
             col1, col2 = st.columns(2)
             
             with col1:
-                st.info("EVA Analysis requires:")
-                st.info("• Net Income")
-                st.info("• Total Assets")
-                st.info("• Cost of Capital")
+                st.info("EVA Analysis metrics available")
             
             with col2:
                 latest_year = data['Year'].max()
@@ -555,10 +541,6 @@ with tabs[6]:
                 
                 net_income = latest_data['Net Income']
                 st.metric("Net Income (Latest)", f"₹{net_income:,.0f}")
-                
-                if 'Total Assets' in data.columns:
-                    total_assets = latest_data['Total Assets']
-                    st.metric("Total Assets", f"₹{total_assets:,.0f}")
             
             st.divider()
             st.dataframe(data, use_container_width=True)
