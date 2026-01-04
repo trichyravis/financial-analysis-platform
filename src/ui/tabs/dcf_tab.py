@@ -13,12 +13,15 @@ def render_dcf_tab(data, settings):
     
     with col1:
         st.write("### Valuation Inputs")
-        # Growth and Terminal assumptions
-        growth_input = st.slider("Next 5Y Growth Rate (%)", 0.0, 40.0, 15.0) / 100
-        t_growth = st.slider("Terminal Growth (%)", 0.0, 7.0, 4.0) / 100
-        
-        # Pull WACC from sidebar settings (provided via app.py)
+        growth_input = st.slider("Next 5Y Growth (%)", 0.0, 40.0, 15.0) / 100
+    
+        # Cap Terminal Growth at 6% (Institutional Standard for India)
+        t_growth = st.slider("Terminal Growth (%)", 0.0, 6.0, 4.0) / 100
+    
         wacc = settings.get('wacc', 12.0) / 100
+    
+        if wacc <= t_growth:
+            st.error("🚨 WACC must be greater than Terminal Growth.")
 
     # 2. FCF LOGIC
     # Institutional approach: FCF = Net Profit + Depreciation - CapEx
