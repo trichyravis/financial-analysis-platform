@@ -5,45 +5,49 @@ from src.core.config import COLORS
 def apply_custom_css():
     st.markdown(f"""
         <style>
-            /* HEADER: THE MOUNTAIN PATH */
+            /* 1. MAIN HEADER: THE MOUNTAIN PATH */
             header[data-testid="stHeader"] {{
                 background-color: {COLORS['primary_dark']} !important;
             }}
             .main-header {{
                 background-color: {COLORS['primary_dark']} !important;
-                padding: 2.5rem !important;
-                border-bottom: 5px solid #FFD700 !important;
+                padding: 2rem !important;
+                border-bottom: 6px solid #FFD700 !important;
+                margin-bottom: 25px !important;
             }}
             .main-header h1 {{
                 color: #FFD700 !important; /* PURE GOLD */
                 font-size: 3.5rem !important;
                 font-weight: 900 !important;
-                text-shadow: 3px 3px 2px #000000 !important;
+                text-shadow: 2px 2px 4px #000000 !important; /* Makes it pop */
+                margin: 0 !important;
             }}
 
-            /* SIDEBAR: UPLOADER TEXT & LABELS */
-            section[data-testid="stSidebar"] {{
+            /* 2. SIDEBAR: UPLOADER CONTRAST */
+            [data-testid="stSidebar"] {{
                 background-color: {COLORS['primary_dark']} !important;
             }}
             
-            /* The Uploader Box text */
+            /* Forces the uploader box to be white so black text is visible */
             [data-testid="stFileUploadDropzone"] {{
                 background-color: #FFFFFF !important;
                 border: 2px dashed #000000 !important;
             }}
+            
+            /* FORCE BLACK TEXT for "Drag and Drop" and "Limit 200MB" */
             [data-testid="stFileUploadDropzone"] * {{
-                color: #000000 !important; /* PURE BLACK */
-                font-weight: bold !important;
+                color: #000000 !important; 
+                font-weight: 800 !important;
             }}
 
-            /* Sidebar general labels */
+            /* 3. SIDEBAR LABELS (WACC, Tax Rate) */
             section[data-testid="stSidebar"] label p {{
                 color: #FFFFFF !important; /* PURE WHITE */
                 font-size: 1.1rem !important;
                 font-weight: bold !important;
             }}
 
-            /* FOOTER */
+            /* 4. FIXED FOOTER */
             .footer {{
                 position: fixed;
                 bottom: 0;
