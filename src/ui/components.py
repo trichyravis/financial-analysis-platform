@@ -5,28 +5,36 @@ from src.core.config import COMPANY_NAME, TAGLINE, AUTHOR, AUTHOR_CREDENTIALS
 class UIComponents:
     @staticmethod
     def header(title):
-        """Renders the branded Mountain Path Hero Header."""
+        """Renders the branded Mountain Path Hero Header using CSS classes."""
         st.markdown(f"""
-            <div class="hero-header">
-                <h1 style="color: white; margin: 0; font-size: 2.5rem;">🏔️ {COMPANY_NAME}</h1>
-                <p style="color: #FFD700; font-size: 1.2rem; margin: 5px 0;">{TAGLINE} | {title}</p>
-                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2);">
-                <p style="font-size: 0.9rem; opacity: 0.9;">{AUTHOR} • {AUTHOR_CREDENTIALS}</p>
+            <div class="main-header">
+                <h1>🏔️ {COMPANY_NAME}</h1>
+                <p style="color: #FFD700; font-size: 1.2rem; margin: 5px 0; font-weight: bold;">
+                    {TAGLINE} | {title}
+                </p>
+                <div style="height: 1px; background-color: rgba(255,255,255,0.2); margin: 10px 0;"></div>
+                <p style="font-size: 0.9rem; color: white; opacity: 0.9; margin: 0;">
+                    {AUTHOR}
+                </p>
+                <p style="font-size: 0.8rem; color: white; opacity: 0.7; margin: 0;">
+                    {AUTHOR_CREDENTIALS}
+                </p>
             </div>
         """, unsafe_allow_html=True)
 
     @staticmethod
     def footer():
-        """Renders the institutional footer."""
-        st.divider()
+        """Renders the institutional sticky footer with gold accent."""
         st.markdown(f"""
-            <div style="text-align: center; padding: 20px; color: #666;">
-                <p><b>{COMPANY_NAME} - World of Finance</b></p>
-                <p>Bridging Academic Theory with Institutional Practice</p>
-                <p style="font-size: 0.8rem;">© 2026 {AUTHOR}. All rights reserved.</p>
-                <p style="font-size: 0.7rem; font-style: italic;">
-                    Disclaimer: This tool is for educational purposes only. Financial analysis should not be 
-                    interpreted as investment advice.
-                </p>
+            <div class="footer">
+                <div style="margin-bottom: 5px;">
+                    <b>{COMPANY_NAME} - {TAGLINE}</b>
+                </div>
+                <div style="font-size: 0.8rem; opacity: 0.8;">
+                    Bridging Academic Theory with Institutional Practice | © 2026 {AUTHOR}
+                </div>
+                <div style="font-size: 0.7rem; font-style: italic; margin-top: 5px; opacity: 0.6;">
+                    Disclaimer: Educational purposes only. Not investment advice.
+                </div>
             </div>
         """, unsafe_allow_html=True)
