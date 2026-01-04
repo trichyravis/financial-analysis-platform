@@ -49,7 +49,7 @@ def main():
         # 5. DATA INGESTION ENGINE
         with st.spinner("🏔️ Scaling the data... Processing Screener.in Excel..."):
             loader = UniversalScreenerLoader(uploaded_file)
-            processed_data = loader.get_processed_data()
+            processed_data, metadata = loader.get_processed_data()
             
             # Extract metadata (Market Cap, Current Price) if available
             metadata = loader.get_metadata() if hasattr(loader, 'get_metadata') else {}
