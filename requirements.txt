@@ -1,16 +1,7 @@
 
-# Web Framework & UI
 streamlit==1.37.0
-
-# Data Manipulation & Analysis
 pandas==2.2.0
 numpy==1.26.4
-
-# Scientific Computing
 scipy==1.13.0
-
-# Visualization
 plotly==5.19.0
-
-# Excel Support
-openpyxl==3.11.6
+openpyxl==3.11.6  ✗ THIS VERSION DOESN'T EXIST!
