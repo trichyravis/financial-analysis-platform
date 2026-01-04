@@ -1,7 +1,16 @@
 
-streamlit
-pandas
-numpy
-scipy
-plotly
-openpyxl
+# Core Streamlit
+streamlit>=1.30.0
+
+# Data Manipulation
+pandas>=2.0.0
+numpy>=1.24.0
+openpyxl>=3.1.0  # Required for reading Excel files
+
+# Visualization
+plotly>=5.15.0
+matplotlib>=3.7.0
+scipy>=1.10.0    # Required for Risk Analysis calculations
+
+# Utilities
+python-dateutil>=2.8.2
