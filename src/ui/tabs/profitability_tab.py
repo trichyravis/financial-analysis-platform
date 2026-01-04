@@ -3,28 +3,29 @@ import streamlit as st
 from src.analysis.financial import FinancialAnalyzer
 
 def render_profitability_tab(data):
-    """Renders detailed margin and return analysis."""
-    st.subheader("📉 Profitability & Efficiency Analysis")
+    st.subheader("📊 Profitability & Margin Analysis")
     
     analyzer = FinancialAnalyzer(data)
     metrics_df = analyzer.get_profitability_metrics()
     
-    # Margin Analysis
+    # --- Margin Trends ---
     st.write("#### Margin Trends (%)")
-    margin_cols = ['Gross Margin %', 'EBITDA Margin %', 'Net Margin %']
-    st.area_chart(metrics_df.set_index('Year')[margin_cols])
     
-    # Return Ratios Table
+    # List of columns we WANT to show
+    target_cols = ['Gross Margin %', 'EBITDA Margin %', 'Net Margin %']
+    
+    # Safety Check: Only use columns that actually exist in metrics_df
+    available_cols = [col for col in target_cols if col in metrics_df.columns]
+    
+    if available_cols:
+        # Use metrics_df['Year'] for the x-axis
+        chart_data = metrics_df.set_index('Year')[available_cols]
+        st.area_chart(chart_data)
+    else:
+        st.error("Could not find required margin columns in processed data.")
+
+    st.divider()
+    
+    # --- Return Ratios ---
     st.write("#### Historical Return Ratios")
-    formatted_df = metrics_df[['Year', 'ROE %', 'ROCE %']].copy()
-    formatted_df['ROE %'] = formatted_df['ROE %'].map('{:.2f}%'.format)
-    formatted_df['ROCE %'] = formatted_df['ROCE %'].map('{:.2f}%'.format)
-    
-    st.table(formatted_df)
-    
-    # Key Insight
-    latest_roe = metrics_df.iloc[-1]['ROE %']
-    if latest_roe > 20:
-        st.success(f"🌟 High Capital Efficiency: Current ROE is {latest_roe:.2f}%")
-    elif latest_roe < 10:
-        st.warning(f"⚠️ Capital Efficiency Concern: Current ROE is {latest_roe:.2f}%")
+    st.dataframe(metrics_df[['Year', 'ROE %']].set_index('Year').T, width='stretch')
