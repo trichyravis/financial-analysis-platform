@@ -2,29 +2,25 @@
 import streamlit as st
 from src.analysis.financial import FinancialAnalyzer
 
-def render_dashboard(data):
-    st.subheader("📊 Executive Summary")
+def render_dashboard(data, meta):
+    st.subheader("📊 Executive Dashboard")
     
-    analyzer = FinancialAnalyzer(data)
-    
-    # These calls will now succeed
-    prof_metrics = analyzer.get_profitability_metrics().iloc[-1]
-    solv_metrics = analyzer.get_solvency_metrics().iloc[-1]
-    
-    # 🏔️ Mountain Path Branded Metrics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Latest Sales", f"₹{data.iloc[-1].get('Sales', 0):,.0f} Cr")
-    with col2:
-        st.metric("Net Margin", f"{prof_metrics['Net Margin %']:.2f}%")
-    with col3:
-        st.metric("ROE", f"{prof_metrics['ROE %']:.2f}%")
-    with col4:
-        st.metric("Debt-to-Equity", f"{solv_metrics['Debt-to-Equity']:.2f}x")
+    # Metadata Row (Branded)
+    m1, m2, m3 = st.columns(3)
+    with m1: st.metric("Market Cap", f"₹{meta.get('Market Cap', 0):,.0f} Cr")
+    with m2: st.metric("Current Price", f"₹{meta.get('Current Price', 0):,.2f}")
+    with m3: st.metric("Total Shares", f"{meta.get('Total Shares', 0):,.2f} Cr")
 
     st.divider()
     
-    # Visualizing the 10-year trend
-    st.subheader("📈 Financial Performance Trend")
-    chart_data = data[['Report Date', 'Sales', 'Net Profit']].set_index('Report Date')
-    st.line_chart(chart_data)
+    analyzer = FinancialAnalyzer(data)
+    prof = analyzer.get_profitability_metrics().iloc[-1]
+    
+    # 🏔️ Institutional Metric Display
+    cols = st.columns(4)
+    cols[0].metric("ROE %", f"{prof.get('ROE %', 0):.2f}%")
+    cols[1].metric("Net Margin %", f"{prof.get('Net Margin %', 0):.2f}%")
+    cols[2].metric("Sales Growth (YoY)", f"{data['Sales'].pct_change().iloc[-1]*100:.1f}%")
+    cols[3].metric("Debt/Equity", f"{(data['Borrowings']/ (data['Equity Share Capital']+data['Reserves'])).iloc[-1]:.2f}x")
+
+    st.line_chart(data.set_index('Report Date')[['Sales', 'Net Profit']])
