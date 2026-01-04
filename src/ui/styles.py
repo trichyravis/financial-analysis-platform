@@ -1,64 +1,61 @@
 
 import streamlit as st
-from src.core.config import COLORS
 
 def apply_custom_css():
-    st.markdown(f"""
+    st.markdown("""
         <style>
             /* 1. MAIN HEADER: THE MOUNTAIN PATH */
-            header[data-testid="stHeader"] {{
-                background-color: {COLORS['primary_dark']} !important;
-            }}
-            .main-header {{
-                background-color: {COLORS['primary_dark']} !important;
-                padding: 2rem !important;
-                border-bottom: 6px solid #FFD700 !important;
-                margin-bottom: 25px !important;
-            }}
-            .main-header h1 {{
+            .main-header h1 {
                 color: #FFD700 !important; /* PURE GOLD */
                 font-size: 3.5rem !important;
                 font-weight: 900 !important;
-                text-shadow: 2px 2px 4px #000000 !important; /* Makes it pop */
-                margin: 0 !important;
-            }}
+                text-shadow: 3px 3px 5px #000000 !important; /* Hard shadow for depth */
+                letter-spacing: 1px;
+            }
 
-            /* 2. SIDEBAR: UPLOADER CONTRAST */
-            [data-testid="stSidebar"] {{
-                background-color: {COLORS['primary_dark']} !important;
-            }}
+            /* 2. SIDEBAR: PURE BLACK TEXT ON WHITE BOX */
+            [data-testid="stSidebar"] {
+                background-color: #002b5b !important; /* Deep Navy */
+            }
             
-            /* Forces the uploader box to be white so black text is visible */
-            [data-testid="stFileUploadDropzone"] {{
-                background-color: #FFFFFF !important;
-                border: 2px dashed #000000 !important;
-            }}
+            /* File Uploader Box */
+            [data-testid="stFileUploadDropzone"] {
+                background-color: #FFFFFF !important; /* Pure White background */
+                border: 2px solid #FFD700 !important;
+            }
             
-            /* FORCE BLACK TEXT for "Drag and Drop" and "Limit 200MB" */
-            [data-testid="stFileUploadDropzone"] * {{
-                color: #000000 !important; 
+            /* Drag and Drop / Limit 200MB text */
+            [data-testid="stFileUploadDropzone"] * {
+                color: #000000 !important; /* FORCED PURE BLACK */
                 font-weight: 800 !important;
-            }}
+            }
 
-            /* 3. SIDEBAR LABELS (WACC, Tax Rate) */
-            section[data-testid="stSidebar"] label p {{
-                color: #FFFFFF !important; /* PURE WHITE */
-                font-size: 1.1rem !important;
+            /* 3. SIDEBAR SLIDER CONTRAST */
+            [data-testid="stSidebar"] .stMarkdown p, 
+            [data-testid="stSidebar"] label {
+                color: #FFFFFF !important; /* PURE WHITE labels */
                 font-weight: bold !important;
-            }}
+                font-size: 1.1rem !important;
+            }
+            
+            /* Slider Numbers (5.0, 25.0) */
+            [data-testid="stTickBar"] span {
+                color: #FFFFFF !important;
+                font-weight: 900 !important;
+            }
 
             /* 4. FIXED FOOTER */
-            .footer {{
+            .footer {
                 position: fixed;
                 bottom: 0;
-                left: 0;
                 width: 100%;
-                background-color: {COLORS['primary_dark']} !important;
+                background-color: #002b5b !important;
                 color: #FFD700 !important;
+                border-top: 3px solid #FFD700;
                 text-align: center;
                 padding: 10px;
-                border-top: 3px solid #FFD700;
-                z-index: 999;
-            }}
+                font-weight: bold;
+                z-index: 1000;
+            }
         </style>
     """, unsafe_allow_html=True)
