@@ -18,8 +18,8 @@ def render_sidebar():
         st.divider()
         
         st.subheader("Analysis Parameters")
-        wacc = st.slider("Cost of Capital (WACC %)", 5.0, 20.0, 10.0, step=0.5) / 100
-        tax = st.number_input("Marginal Tax Rate", 0.0, 0.4, 0.25)
+        wacc_pct = st.sidebar.slider("Cost of Capital (WACC %)", 5.0, 25.0, 10.0)
+        settings['wacc'] = wacc_pct # Store as 10.0
         
         st.sidebar.success("✅ System Ready" if uploaded_file else "⏳ Awaiting Data")
         
