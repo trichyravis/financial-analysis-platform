@@ -4,8 +4,15 @@ import numpy as np
 
 class FinancialAnalyzer:
     def __init__(self, df):
-        # Ensure 'Report Date' or 'Year' exists as an index or column
-        self.df = df
+        # Safety check: if df is a tuple (data, meta), take only the data
+        if isinstance(df, tuple):
+            self.df = df[0]
+        else:
+            self.df = df
+            
+        # Ensure the index is valid
+        if self.df is None or self.df.empty:
+            raise ValueError("Analyzer received empty or invalid DataFrame")
 
     def safe_get(self, col_name):
         """Returns column data or zeros if column is missing."""
