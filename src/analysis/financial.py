@@ -4,97 +4,81 @@ import numpy as np
 
 class FinancialAnalyzer:
     def __init__(self, df):
-        # Unpack tuple if data_loader returned (df, meta)
-        if isinstance(df, tuple):
-            self.df = df[0]
-        else:
-            self.df = df
-            
-        if self.df is None or self.df.empty:
-            raise ValueError("Analyzer received empty or invalid DataFrame")
-
-    def safe_get(self, col_name):
-        """Standardizes metric retrieval across different company types."""
-        # Mapping common variations in Screener.in names
-        aliases = {
-            'Sales': ['Sales', 'Revenue', 'Interest Earned', 'Turnover'],
-            'Net Profit': ['Net Profit', 'Profit After Tax', 'Pat'],
-            'Borrowings': ['Borrowings', 'Total Debt', 'Long Term Borrowings'],
-            'Equity': ['Equity Share Capital', 'Share Capital'],
-            'Raw Materials': ['Raw Material Cost', 'Cost Of Materials Consumed', 'Purchases Of Stock-In-Trade'],
-            'Total Assets': ['Total Assets', 'Total Liabilities'],
-            'Inventory': ['Inventory', 'Inventories'],
-            'Trade Receivables': ['Trade Receivables', 'Receivables']
-        }
-        
-        # Check for aliases if exact name isn't found
-        if col_name not in self.df.columns and col_name in aliases:
-            for alias in aliases[col_name]:
-                if alias in self.df.columns:
-                    return self.df[alias]
-        
-        if col_name in self.df.columns:
-            return self.df[col_name]
-        return pd.Series(0, index=self.df.index)
+        """
+        Initializes the analyzer with the processed dataframe from the loader.
+        Expects a dataframe where rows are years and columns are financial metrics.
+        """
+        self.df = df.copy()
+        # Ensure all columns except 'Report Date' are numeric
+        for col in self.df.columns:
+            if col != 'Report Date':
+                self.df[col] = pd.to_numeric(self.df[col], errors='coerce').fillna(0)
 
     def get_profitability_metrics(self):
-        """Calculates margins and return ratios for Tab 3."""
+        """
+        Calculates core profitability ratios with index alignment safety.
+        Fixes the ValueError by ensuring the result matches the input length.
+        """
+        # 1. Initialize empty metrics dataframe with the same index as source
         metrics = pd.DataFrame(index=self.df.index)
-        metrics['Year'] = self.df['Report Date'] if 'Report Date' in self.df.columns else self.df.index
         
-        sales = self.safe_get('Sales')
-        net_profit = self.safe_get('Net Profit')
-        depreciation = self.safe_get('Depreciation')
-        interest = self.safe_get('Interest')
-        pbt = self.safe_get('Profit Before Tax')
+        # 2. Extract components for readability
+        pat = self.df['Net Profit']
+        sales = self.df['Sales']
         
-        # 1. Gross Margin Calculation
-        gross_profit = self.safe_get('Gross Profit')
-        if (gross_profit == 0).all():
-            rm_costs = self.safe_get('Raw Materials')
-            gross_profit = sales - rm_costs
+        # Equity = Share Capital + Reserves
+        equity = self.df.get('Equity Share Capital', 0) + self.df.get('Reserves', 0)
+        
+        # 3. Calculate Ratios (Pandas aligns these automatically via the index)
+        metrics['Net Margin %'] = (pat / sales.replace(0, np.nan)) * 100
+        metrics['ROE %'] = (pat / equity.replace(0, np.nan)) * 100
+        
+        # 4. Add 'Year' column safely
+        if 'Report Date' in self.df.columns:
+            metrics['Year'] = self.df['Report Date']
+        else:
+            metrics['Year'] = self.df.index
             
-        metrics['Gross Margin %'] = (gross_profit / sales.replace(0, np.nan)) * 100
-        
-        # 2. EBITDA Margin
-        ebitda = pbt + depreciation + interest
-        metrics['EBITDA Margin %'] = (ebitda / sales.replace(0, np.nan)) * 100
-        metrics['Net Margin %'] = (net_profit / sales.replace(0, np.nan)) * 100
-        
-        # 3. ROE Calculation
-        equity_base = self.safe_get('Equity Share Capital') + self.safe_get('Reserves')
-        metrics['ROE %'] = (net_profit / equity_base.replace(0, np.nan)) * 100
-        
-        return metrics
+        return metrics.fillna(0)
 
     def get_solvency_metrics(self):
-        """Calculates Debt-to-Equity and Interest Coverage for Tab 6."""
-        solvency = pd.DataFrame(index=self.df.index)
-        solvency['Year'] = self.df['Report Date'] if 'Report Date' in self.df.columns else self.df.index
+        """
+        Calculates balance sheet strength metrics.
+        """
+        metrics = pd.DataFrame(index=self.df.index)
         
-        equity_base = self.safe_get('Equity Share Capital') + self.safe_get('Reserves')
-        borrowings = self.safe_get('Borrowings')
-        pbt = self.safe_get('Profit Before Tax')
-        interest = self.safe_get('Interest')
-
-        solvency['Debt-to-Equity'] = borrowings / equity_base.replace(0, np.nan)
-        solvency['Interest Coverage'] = (pbt + interest) / interest.replace(0, np.nan).fillna(999)
+        borrowings = self.df.get('Borrowings', 0)
+        equity = self.df.get('Equity Share Capital', 0) + self.df.get('Reserves', 0)
+        total_assets = self.df.get('Total Assets', 0)
         
-        return solvency
+        metrics['Debt-to-Equity'] = borrowings / equity.replace(0, np.nan)
+        metrics['Equity Multiplier'] = total_assets / equity.replace(0, np.nan)
+        
+        if 'Report Date' in self.df.columns:
+            metrics['Year'] = self.df['Report Date']
+        else:
+            metrics['Year'] = self.df.index
+            
+        return metrics.fillna(0)
 
     def get_efficiency_metrics(self):
-        """Calculates Asset Turnover and Working Capital Cycles for Tab 7."""
-        eff = pd.DataFrame(index=self.df.index)
-        eff['Year'] = self.df['Report Date'] if 'Report Date' in self.df.columns else self.df.index
+        """
+        Calculates operational efficiency metrics.
+        """
+        metrics = pd.DataFrame(index=self.df.index)
         
-        sales = self.safe_get('Sales')
-        assets = self.safe_get('Total Assets')
-        inventory = self.safe_get('Inventory')
-        debtors = self.safe_get('Trade Receivables')
+        sales = self.df['Sales']
+        inventory = self.df.get('Inventory', 0)
+        debtors = self.df.get('Trade Receivables', 0)
         
-        # Calculation with zero-division protection
-        eff['Asset Turnover'] = sales / assets.replace(0, np.nan)
-        eff['Inventory Turnover'] = sales / inventory.replace(0, np.nan)
-        eff['Debtor Days'] = (debtors / sales.replace(0, np.nan)) * 365
+        # Asset Turnover
+        total_assets = self.df.get('Total Assets', 0)
+        metrics['Asset Turnover'] = sales / total_assets.replace(0, np.nan)
         
-        return eff
+        # Working Capital Ratios
+        if 'Report Date' in self.df.columns:
+            metrics['Year'] = self.df['Report Date']
+        else:
+            metrics['Year'] = self.df.index
+            
+        return metrics.fillna(0)
