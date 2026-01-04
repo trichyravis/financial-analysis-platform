@@ -5,40 +5,55 @@ from src.core.config import COLORS
 def apply_custom_css():
     st.markdown(f"""
         <style>
-            /* 1. Global App & Sidebar */
-            [data-testid="stSidebar"] {{
+            /* 1. GLOBAL SIDEBAR OVERRIDE */
+            /* Forces the Navy Blue background and sets a base white color */
+            section[data-testid="stSidebar"] {{
                 background-color: {COLORS['primary_dark']} !important;
-            }}
-            
-            /* General Sidebar Text remains White for contrast against Navy */
-            [data-testid="stSidebar"] span, [data-testid="stSidebar"] label, [data-testid="stSidebar"] p {{
                 color: #FFFFFF !important;
             }}
 
-            /* 2. FILE UPLOADER FIX: Force Text to BLACK inside the frame */
-            [data-testid="stFileUploadDropzone"] {{
-                background-color: #FFFFFF !important; /* White background for the box */
-                border: 2px dashed {COLORS['accent_gold']} !important;
-                border-radius: 10px !important;
-            }}
-
-            /* Targets the "Browse files" text and "Drag and drop" instructions */
-            [data-testid="stFileUploadDropzone"] * {{
-                color: #000000 !important; /* PURE BLACK TEXT */
+            /* 2. FORCE TEXT COLORS FOR ALL SIDEBAR ELEMENTS */
+            /* This ensures Headers, Labels, and normal text are always White */
+            section[data-testid="stSidebar"] h1, 
+            section[data-testid="stSidebar"] h2, 
+            section[data-testid="stSidebar"] h3, 
+            section[data-testid="stSidebar"] label, 
+            section[data-testid="stSidebar"] p, 
+            section[data-testid="stSidebar"] span {{
+                color: #FFFFFF !important;
                 font-weight: 500 !important;
             }}
+
+            /* 3. FILE UPLOADER CONTRAST FIX */
+            /* We make the box white so the black text inside it stands out */
+            [data-testid="stFileUploadDropzone"] {{
+                background-color: #FFFFFF !important;
+                border: 2px dashed {COLORS['accent_gold']} !important;
+            }}
             
-            /* Specific fix for the 'Limit 200MB' small text */
-            [data-testid="stFileUploadDropzone"] small {{
-                color: #333333 !important;
+            /* Forces the "Drag and drop", "Browse files", and "Limit" text to BLACK */
+            [data-testid="stFileUploadDropzone"] * {{
+                color: #000000 !important;
             }}
 
-            /* 3. Sidebar Slider Fix (Already discussed) */
-            [data-testid="stSidebar"] [data-baseweb="slider"] {{
-                background-color: transparent !important;
+            /* 4. SLIDER VISIBILITY */
+            /* Ensures the slider numbers and labels at the ends (5.0, 25.0) are White */
+            [data-testid="stSidebar"] [data-testid="stTickBarMin"],
+            [data-testid="stSidebar"] [data-testid="stTickBarMax"],
+            [data-testid="stSidebar"] [data-testid="stSliderTick"] {{
+                color: #FFFFFF !important;
+            }}
+            
+            /* Changes the Slider handle to Gold for branding */
+            [data-testid="stSidebar"] .st-eb {{
+                background-color: {COLORS['accent_gold']} !important;
             }}
 
-            /* 4. Main Header and Footer Branding (As per your design) */
+            /* 5. HEADER & FOOTER (Matches your previous design) */
+            [data-testid="stHeader"] {{
+                background-color: {COLORS['primary_dark']} !important;
+            }}
+            
             .main-header {{
                 background-color: {COLORS['primary_dark']};
                 padding: 1.5rem;
