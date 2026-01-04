@@ -1,43 +1,39 @@
 
-"""
-thesis.py - Investment Decision Engine
-🏔️ THE MOUNTAIN PATH
-"""
+import pandas as pd
 
 class ThesisEngine:
-    def __init__(self, data, dcf_price, current_price):
+    def __init__(self, data, dcf_val, market_price):
         self.data = data
-        self.dcf_val = dcf_price
-        self.market_val = current_price
+        self.dcf_val = dcf_val
+        self.market_price = market_price
 
     def generate_verdict(self):
         points = 0
         reasons = []
 
         # 1. Valuation Check
-        if self.dcf_val > self.market_val:
+        if self.dcf_val > self.market_price and self.dcf_val > 0:
             points += 1
-            upside = ((self.dcf_val / self.market_val) - 1) * 100
-            reasons.append(f"✅ Undervalued: DCF suggests {upside:.1f}% upside.")
+            reasons.append("✅ **Value:** Stock is trading below its Intrinsic Value.")
         else:
-            reasons.append("❌ Overvalued: Current price exceeds Intrinsic Value.")
+            reasons.append("❌ **Value:** Stock is potentially overvalued or DCF not set.")
 
-        # 2. Profitability Check (ROE > 15%)
+        # 2. ROE Quality Check
         latest_roe = self.data['ROE %'].iloc[-1] if 'ROE %' in self.data.columns else 0
         if latest_roe > 15:
             points += 1
-            reasons.append(f"✅ High Quality: ROE of {latest_roe:.1f}% is robust.")
+            reasons.append(f"✅ **Quality:** Robust ROE of {latest_roe:.1f}% (Benchmark > 15%).")
         else:
-            reasons.append(f"⚠️ Low Returns: ROE of {latest_roe:.1f}% is below benchmark.")
+            reasons.append(f"⚠️ **Quality:** ROE of {latest_roe:.1f}% is below institutional standards.")
 
-        # 3. Debt Check (D/E < 1.0)
-        debt = self.data.get('Borrowings', 0).iloc[-1]
+        # 3. Solvency Check
         equity = (self.data.get('Equity Share Capital', 0) + self.data.get('Reserves', 0)).iloc[-1]
-        de_ratio = debt / equity if equity != 0 else 0
+        debt = self.data.get('Borrowings', 0).iloc[-1]
+        de_ratio = debt / equity if equity > 0 else 0
         if de_ratio < 1:
             points += 1
-            reasons.append(f"✅ Safe Leverage: Debt-to-Equity is low at {de_ratio:.2f}.")
+            reasons.append(f"✅ **Solvency:** Healthy Debt-to-Equity ratio of {de_ratio:.2f}.")
         else:
-            reasons.append(f"⚠️ Risky Leverage: Debt-to-Equity is high at {de_ratio:.2f}.")
+            reasons.append(f"⚠️ **Solvency:** High leverage detected ({de_ratio:.2f}).")
 
         return points, reasons
