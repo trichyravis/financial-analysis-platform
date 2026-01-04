@@ -1,20 +1,18 @@
+
 [theme]
-primaryColor = "#003366"
+primaryColor = "#FFD700"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F0F2F6"
-textColor = "#333333"
+textColor = "#002147"
 font = "sans serif"
 
-[client]
-showErrorDetails = false
-toolbarMode = "auto"
-
-[logger]
-level = "info"
+[server]
+port = 8501
+enableCORS = false
+headless = true
 
 [browser]
 gatherUsageStats = false
 
-[server]
-maxUploadSize = 500
-enableXsrfProtection = true
+[client]
+showErrorDetails = false
