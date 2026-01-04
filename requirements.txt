@@ -1,7 +1,7 @@
 
-streamlit==1.37.0
-pandas==2.2.0
-numpy==1.26.4
-scipy==1.13.0
-plotly==5.19.0
-openpyxl==3.11.6  ✗ THIS VERSION DOESN'T EXIST!
+streamlit
+pandas
+numpy
+scipy
+plotly
+openpyxl
