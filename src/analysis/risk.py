@@ -1,21 +1,34 @@
-import numpy as np
+
 import pandas as pd
+import numpy as np
 
 class RiskAnalyzer:
-    """Calculates VaR and Volatility metrics."""
-    
-    def __init__(self, sales_data):
-        self.returns = sales_data.pct_change().dropna()
+    def __init__(self, df):
+        self.df = df
 
-    def calculate_metrics(self):
-        """Calculates standard risk parameters."""
-        volatility = self.returns.std() * np.sqrt(1) # Annualized if using annual data
+    def get_risk_metrics(self):
+        """Calculates volatility and safety margins."""
+        risk = {}
         
-        # Value at Risk (95% Confidence)
-        var_95 = np.percentile(self.returns, 5)
+        # 1. Earnings & Sales Volatility (Standard Deviation of Growth)
+        sales_growth = self.df['Sales'].pct_change()
+        profit_growth = self.df['Net Profit'].pct_change()
         
-        return {
-            "Volatility (Sales)": f"{volatility*100:.2f}%",
-            "VaR (95% Conf)": f"{var_95*100:.2f}%",
-            "Max Drawdown (Sales)": f"{(self.returns.min())*100:.2f}%"
-        }
+        risk['Sales Volatility (%)'] = sales_growth.std() * 100
+        risk['Profit Volatility (%)'] = profit_growth.std() * 100
+        
+        # 2. Financial Leverage Risk
+        total_debt = self.df['Borrowings'].iloc[-1]
+        equity = (self.df['Equity Share Capital'] + self.df['Reserves']).iloc[-1]
+        risk['Debt to Equity (Latest)'] = total_debt / equity if equity != 0 else 0
+        
+        # 3. Interest Coverage (Safety Margin)
+        pbt = self.df['Profit Before Tax'].iloc[-1]
+        interest = self.df['Interest'].iloc[-1]
+        risk['Interest Coverage'] = (pbt + interest) / interest if interest > 0 else 999
+        
+        # 4. Cash Flow Coverage
+        cfo = self.df.get('Cash From Operating Activity', pd.Series([0]*len(self.df))).iloc[-1]
+        risk['CFO to Debt Ratio'] = cfo / total_debt if total_debt > 0 else 999
+        
+        return pd.Series(risk)
