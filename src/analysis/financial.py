@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np
 
 class FinancialAnalyzer:
-    # ... rest of your code ...
-class FinancialAnalyzer:
     def __init__(self, df):
         self.df = df
 
