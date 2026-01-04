@@ -5,41 +5,60 @@ from src.core.config import COLORS
 def apply_custom_css():
     st.markdown(f"""
         <style>
-            /* Main Background */
+            /* 1. Global App Background */
             .stApp {{
                 background-color: {COLORS['background']};
             }}
             
-            /* Sidebar Styling */
+            /* 2. Sidebar Background & Text Color Fix */
             [data-testid="stSidebar"] {{
+                background-color: {COLORS['primary_dark']} !important;
+            }}
+            
+            /* Ensures all text, labels, and icons in sidebar are White/Visible */
+            [data-testid="stSidebar"] *, [data-testid="stSidebar"] p, [data-testid="stSidebar"] span {{
+                color: #FFFFFF !important;
+            }}
+
+            /* 3. Header / Top Bar Branding */
+            [data-testid="stHeader"] {{
+                background-color: {COLORS['primary_dark']} !important;
+                color: #FFFFFF !important;
+            }}
+
+            /* 4. Custom Header Styling (The Title) */
+            .main-header {{
                 background-color: {COLORS['primary_dark']};
+                color: {COLORS['accent_gold']};
+                padding: 1.5rem;
+                border-radius: 10px;
+                border-bottom: 4px solid {COLORS['accent_gold']};
+                margin-bottom: 2rem;
+                text-align: center;
             }}
             
-            /* Header Styling */
-            h1 {{
-                color: {COLORS['primary_dark']};
-                border-bottom: 2px solid {COLORS['accent_gold']};
-            }}
-            
-            /* Tab Styling */
+            /* 5. Modern Tab Styling */
             .stTabs [data-baseweb="tab-list"] {{
-                gap: 24px;
+                gap: 8px;
+                background-color: transparent;
             }}
             
             .stTabs [data-baseweb="tab"] {{
-                height: 50px;
-                white-space: pre-wrap;
-                background-color: #FFFFFF;
+                background-color: #E1E4E8;
                 border-radius: 4px 4px 0px 0px;
-                gap: 1px;
-                padding-top: 10px;
-                color: {COLORS['text']};
+                padding: 10px 20px;
+                color: {COLORS['primary_dark']};
             }}
 
             .stTabs [aria-selected="true"] {{
                 background-color: {COLORS['accent_gold']} !important;
-                color: {COLORS['primary_dark']} !important;
                 font-weight: bold;
+                color: {COLORS['primary_dark']} !important;
+            }}
+
+            /* 6. Metric Card Styling */
+            [data-testid="stMetricValue"] {{
+                color: {COLORS['primary_dark']};
             }}
         </style>
     """, unsafe_allow_html=True)
