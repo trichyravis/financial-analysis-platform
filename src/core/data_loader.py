@@ -1,97 +1,90 @@
 
-"""
-data_loader.py - Universal Screener.in Excel Parser
-🏔️ THE MOUNTAIN PATH - World of Finance
-"""
-
 import pandas as pd
 import numpy as np
-import streamlit as st
 
 class UniversalScreenerLoader:
     def __init__(self, uploaded_file):
-        try:
-            # Screener.in data is always in 'Data Sheet'
-            self.raw_df = pd.read_excel(uploaded_file, sheet_name='Data Sheet', header=None)
-        except Exception as e:
-            st.error(f"Error reading Excel: {e}")
-            self.raw_df = None
-
-    def find_row_index(self, keywords):
-        if self.raw_df is None: return None
-        for i, row in self.raw_df.iterrows():
-            val = str(row.iloc[0]).upper().strip()
-            if any(k.upper() in val for k in keywords):
-                return i
-        return None
-
-    def get_metadata(self):
-        """Extracts key company info from the top section."""
-        meta = {}
-        # MCAP and Price are usually in the first 15 rows
-        mcap_idx = self.find_row_index(["Market Capitalization"])
-        price_idx = self.find_row_index(["Current Price"])
-        
-        if mcap_idx is not None: meta['Market Cap'] = self.raw_df.iloc[mcap_idx, 1]
-        if price_idx is not None: meta['Current Price'] = self.raw_df.iloc[price_idx, 1]
-        return meta
-
-    def parse_section(self, start_keywords, rows_to_read=25):
-        start_idx = self.find_row_index(start_keywords)
-        if start_idx is None: return pd.DataFrame()
-        
-        date_row = self.raw_df.iloc[start_idx + 1]
-        dates = date_row[1:].values
-        data_block = self.raw_df.iloc[start_idx + 2 : start_idx + 2 + rows_to_read, :]
-        data_block.columns = ['Metric'] + list(dates)
-        
-        # Clean and Transpose
-        df = data_block.dropna(subset=['Metric']).set_index('Metric').transpose()
-        # Convert index to string to avoid datetime mismatch during merge
-        df.index = df.index.astype(str)
-        return df
+        self.file = uploaded_file
+        self.raw_data = None
+        self.metadata = {
+            'market_cap': 0.0,
+            'current_price': 0.0,
+            'total_shares': 0.0,
+            'company_name': "Unknown Entity"
+        }
 
     def get_processed_data(self):
-        if self.raw_df is None: return None, {}
+        """Main entry point to load and clean the Excel data."""
         try:
-            # 1. Parse individual sections
-            pl = self.parse_section(["PROFIT & LOSS", "P&L"])
-            bs = self.parse_section(["BALANCE SHEET"])
-            cf = self.parse_section(["CASH FLOW"])
-            
-            # 2. Combine sections
-            combined = pd.concat([pl, bs, cf], axis=1)
-            
-            # 3. Clean duplicate columns and standardize names
-            combined = combined.loc[:, ~combined.columns.duplicated()]
-            combined.columns = [str(col).strip().title() for col in combined.columns]
-            
-            # 4. FIX FOR "Processing Error: cannot insert Report Date"
-            # If "Report Date" already exists as a column, drop it before reset_index
-            if "Report Date" in combined.columns:
-                combined = combined.drop(columns=["Report Date"])
-            
-            # 5. Map essential columns for calculations
-            mappings = {
-                'Net Profit': ['Net Profit', 'Profit After Tax', 'Pat'],
-                'Sales': ['Sales', 'Revenue', 'Turnover'],
-                'Interest': ['Interest', 'Finance Costs']
-            }
-            
-            for target, aliases in mappings.items():
-                if target not in combined.columns:
-                    for alias in aliases:
-                        if alias.title() in combined.columns:
-                            combined[target] = combined[alias.title()]
-                            break
-            
-            # 6. Clean numeric data (handle '--' or empty strings)
-            for col in combined.columns:
-                combined[col] = pd.to_numeric(combined[col], errors='coerce').fillna(0)
-            
-            processed_df = combined.reset_index().rename(columns={'index': 'Report Date'})
-            return processed_df, self.get_metadata()
-            
+            # Load the 'Data Sheet' specifically from Screener Excel
+            df = pd.read_excel(self.file, sheet_name='Data Sheet', header=None)
+            self.raw_data = df
+
+            # 1. Extract Metadata (Market Cap, Price, Shares)
+            self._extract_metadata(df)
+
+            # 2. Extract Time-Series Financials
+            processed_df = self._extract_financial_table(df)
+
+            return processed_df, self.metadata
+
         except Exception as e:
-            st.error(f"Processing Error: {e}")
-            return None, {}
+            print(f"Error loading data: {e}")
+            return None, None
+
+    def _find_value_by_label(self, df, label):
+        """Hunts for a specific value next to a label in the entire sheet."""
+        for row_idx in range(len(df)):
+            row_content = str(df.iloc[row_idx, 0])
+            if label.lower() in row_content.lower():
+                # Usually, the value is in the next column or two
+                for col_idx in range(1, 4):
+                    val = df.iloc[row_idx, col_idx]
+                    if pd.notnull(val) and isinstance(val, (int, float)):
+                        return float(val)
+        return 0.0
+
+    def _extract_metadata(self, df):
+        """Extracts institutional context from the top of the sheet."""
+        self.metadata['market_cap'] = self._find_value_by_label(df, "Market Capitalization")
+        self.metadata['current_price'] = self._find_value_by_label(df, "Current Price")
+        
+        # Calculate Total Shares in Crores
+        # Formula: Market Cap / Current Price
+        if self.metadata['current_price'] > 0:
+            self.metadata['total_shares'] = self.metadata['market_cap'] / self.metadata['current_price']
+        
+        # Extract Company Name (Usually in Row 0 or 1)
+        self.metadata['company_name'] = str(df.iloc[0, 0]).split('\n')[0]
+
+    def _extract_financial_table(self, df):
+        """Locates the Profit & Loss or Balance Sheet block and formats it."""
+        # Find the row where the 'Report Date' or years start (Usually contains 'Mar-')
+        start_row = 0
+        for i, row in df.iterrows():
+            if any(str(cell).startswith('Mar ') or 'Mar-' in str(cell) for cell in row):
+                start_row = i
+                break
+        
+        # Capture the headers (Years)
+        headers = df.iloc[start_row].tolist()
+        headers[0] = "Report Date"
+        
+        # Slice data from the headers downward
+        data_block = df.iloc[start_row + 1:].copy()
+        data_block.columns = headers
+        
+        # Keep only rows that have a label in the first column and numeric data
+        data_block = data_block[data_block['Report Date'].notnull()]
+        
+        # Pivot the data so 'Report Date' (Years) are the Index
+        # This makes it compatible with our analysis engines
+        final_df = data_block.set_index('Report Date').T
+        
+        # Clean numeric data: remove commas, handle NaNs
+        final_df = final_df.apply(pd.to_numeric, errors='coerce').fillna(0)
+        
+        # Reset index to bring 'Report Date' back as a column
+        final_df = final_df.reset_index().rename(columns={'index': 'Report Date'})
+        
+        return final_df
