@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# Import Core Configurations and Components
+# Import Core Configurations and Branding
 from src.core.config import COLORS, TABS, FINANCIAL_DEFAULTS, COMPANY_NAME, AUTHOR
 from src.core.data_loader import UniversalScreenerLoader
 from src.ui.styles import apply_custom_css
@@ -35,24 +35,23 @@ st.set_page_config(
 )
 
 # 2. APPLY BRANDING (Dark Blue & Gold Theme)
-apply_custom_css()
+apply_main_styles() if 'apply_main_styles' in globals() else apply_custom_css()
 
 def main():
-    # 3. RENDER SIDEBAR (Branded Sidebar with File Uploader)
-    # Returns the uploaded file and user-defined settings (WACC, Growth, etc.)
+    # 3. RENDER SIDEBAR
+    # render_sidebar now returns the file and user settings (WACC, Growth, etc.)
     uploaded_file, settings = render_sidebar()
 
-    # 4. RENDER HERO HEADER (The Mountain Path Design)
+    # 4. RENDER HERO HEADER
     UIComponents.header("Institutional Financial Analytics Platform")
 
     if uploaded_file:
         # 5. DATA INGESTION ENGINE
         with st.spinner("🏔️ Scaling the data... Processing Screener.in Excel..."):
             loader = UniversalScreenerLoader(uploaded_file)
-            processed_data, metadata = loader.get_processed_data()
             
-            # Extract metadata (Market Cap, Current Price) if available
-            metadata = loader.get_metadata() if hasattr(loader, 'get_metadata') else {}
+            # ✅ CORRECT UNPACKING: Separation of Financial Table and Metadata
+            processed_data, metadata = loader.get_processed_data()
 
         if processed_data is not None:
             # 6. 12-TAB INTERFACE
@@ -64,8 +63,8 @@ def main():
 
             # --- TAB 2: FINANCIAL STATEMENTS ---
             with tab_list[1]:
-                st.subheader("📋 Cleaned Financial Data (P&L + BS + CF)")
-                # Transpose for easier reading (years as columns)
+                st.subheader("📋 Historical Financial Statements (P&L + BS + CF)")
+                # Show transposed data (Years as columns) to match Screener.in layout
                 st.dataframe(processed_data.set_index('Report Date').T, width='stretch')
 
             # --- TAB 3: PROFITABILITY ANALYSIS ---
@@ -78,14 +77,13 @@ def main():
 
             # --- TAB 5: EVA ANALYSIS ---
             with tab_list[4]:
-                st.subheader("💎 Economic Value Added (EVA) - Wealth Creation")
-                eva_engine = EVAAnalyzer(processed_data, settings['wacc'])
+                st.subheader("💎 Economic Value Added (EVA)")
+                eva_engine = EVAAnalyzer(processed_data, settings.get('wacc', 0.10))
                 eva_df = eva_engine.calculate_eva()
                 st.dataframe(eva_df, width='stretch')
 
             # --- TAB 6: SOLVENCY & CAPITAL STRUCTURE ---
             with tab_list[5]:
-                from src.analysis.financial import FinancialAnalyzer
                 analyzer = FinancialAnalyzer(processed_data)
                 solvency_df = analyzer.get_solvency_metrics()
                 st.line_chart(solvency_df[['Debt-to-Equity']])
@@ -93,33 +91,31 @@ def main():
 
             # --- TAB 7: OPERATIONAL EFFICIENCY ---
             with tab_list[6]:
-                st.subheader("⚡ Asset Utilization & Efficiency")
-                # Logic for efficiency metrics goes here
-                st.info("Module loading: Asset Turnover, Debtor Days, and Inventory Cycle.")
+                st.subheader("⚡ Asset Utilization & Turnover")
+                efficiency_df = analyzer.get_efficiency_metrics() if hasattr(analyzer, 'get_efficiency_metrics') else pd.DataFrame()
+                st.dataframe(efficiency_df, width='stretch')
 
             # --- TABS 8-12: GROWTH, RISK, PEERS, SUMMARY ---
-            # Implementation follows the same pattern of calling specialized renderers
             for i in range(7, 12):
                 with tab_list[i]:
                     st.write(f"### {TABS[i]}")
-                    st.info("Section currently processing historical data trends...")
+                    st.info("Analysis module loading from historical trends...")
 
         else:
-            st.error("❌ Data Error: The uploaded file structure does not match the Screener.in standard.")
+            st.error("❌ Data Error: File structure does not match standard Screener.in export.")
     
     else:
         # 7. WELCOME / EMPTY STATE
         st.markdown(f"""
         ### 👋 Welcome to {COMPANY_NAME}
-        To begin your analysis, please download the **Standard Excel Export** from [Screener.in](https://www.screener.in) 
-        for any listed Indian company and upload it via the sidebar.
+        To begin, upload the **Standard Excel Export** from [Screener.in](https://www.screener.in).
         """)
         
         col1, col2 = st.columns(2)
         with col1:
-            st.image("https://img.icons8.com/clouds/200/mountain.png")
+            st.info("📊 **Dashboard Features:**\n- Intrinsic Value (DCF)\n- Wealth Creation (EVA)\n- 50+ Financial Ratios")
         with col2:
-            st.warning("📊 **Note:** This tool is optimized for the 'Data Sheet' tab in Screener's Excel files.")
+            st.warning("🏔️ **Branding:** Optimized for Prof. V. Ravichandran's institutional layout.")
 
     # 8. RENDER GLOBAL FOOTER
     UIComponents.footer()
