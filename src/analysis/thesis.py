@@ -1,35 +1,43 @@
 
+"""
+thesis.py - Investment Decision Engine
+🏔️ THE MOUNTAIN PATH
+"""
+
 class ThesisEngine:
-    def __init__(self, data, dcf_val, eva_val):
+    def __init__(self, data, dcf_price, current_price):
         self.data = data
-        self.dcf_val = dcf_val
-        self.eva_val = eva_val
+        self.dcf_val = dcf_price
+        self.market_val = current_price
 
-    def generate_scorecard(self):
-        score = 0
-        checks = []
-        
-        # 1. Profitability Check
-        roe = self.data['ROE %'].iloc[-1]
-        if roe > 15:
-            score += 1
-            checks.append(("✅ Strong Returns", f"ROE of {roe:.1f}% is above the 15% institutional benchmark."))
+    def generate_verdict(self):
+        points = 0
+        reasons = []
+
+        # 1. Valuation Check
+        if self.dcf_val > self.market_val:
+            points += 1
+            upside = ((self.dcf_val / self.market_val) - 1) * 100
+            reasons.append(f"✅ Undervalued: DCF suggests {upside:.1f}% upside.")
         else:
-            checks.append(("⚠️ Subpar Returns", f"ROE of {roe:.1f}% is below target."))
+            reasons.append("❌ Overvalued: Current price exceeds Intrinsic Value.")
 
-        # 2. Wealth Creation (EVA)
-        if self.eva_val > 0:
-            score += 1
-            checks.append(("✅ Wealth Creator", "Positive EVA indicates the company earns more than its cost of capital."))
+        # 2. Profitability Check (ROE > 15%)
+        latest_roe = self.data['ROE %'].iloc[-1] if 'ROE %' in self.data.columns else 0
+        if latest_roe > 15:
+            points += 1
+            reasons.append(f"✅ High Quality: ROE of {latest_roe:.1f}% is robust.")
         else:
-            checks.append(("❌ Wealth Destroyer", "Negative EVA suggests capital is being eroded."))
+            reasons.append(f"⚠️ Low Returns: ROE of {latest_roe:.1f}% is below benchmark.")
 
-        # 3. Solvency Check
-        de = (self.data['Borrowings'] / (self.data['Equity Share Capital'] + self.data['Reserves'])).iloc[-1]
-        if de < 0.5:
-            score += 1
-            checks.append(("✅ Safe Leverage", f"Debt-to-Equity is conservative at {de:.2f}x."))
+        # 3. Debt Check (D/E < 1.0)
+        debt = self.data.get('Borrowings', 0).iloc[-1]
+        equity = (self.data.get('Equity Share Capital', 0) + self.data.get('Reserves', 0)).iloc[-1]
+        de_ratio = debt / equity if equity != 0 else 0
+        if de_ratio < 1:
+            points += 1
+            reasons.append(f"✅ Safe Leverage: Debt-to-Equity is low at {de_ratio:.2f}.")
         else:
-            checks.append(("⚠️ High Leverage", f"Debt-to-Equity of {de:.2f}x may increase financial risk."))
+            reasons.append(f"⚠️ Risky Leverage: Debt-to-Equity is high at {de_ratio:.2f}.")
 
-        return score, checks
+        return points, reasons
