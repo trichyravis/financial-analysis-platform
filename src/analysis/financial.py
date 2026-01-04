@@ -21,7 +21,10 @@ class FinancialAnalyzer:
             'Net Profit': ['Net Profit', 'Profit After Tax', 'Pat'],
             'Borrowings': ['Borrowings', 'Total Debt', 'Long Term Borrowings'],
             'Equity': ['Equity Share Capital', 'Share Capital'],
-            'Raw Materials': ['Raw Material Cost', 'Cost Of Materials Consumed', 'Purchases Of Stock-In-Trade']
+            'Raw Materials': ['Raw Material Cost', 'Cost Of Materials Consumed', 'Purchases Of Stock-In-Trade'],
+            'Total Assets': ['Total Assets', 'Total Liabilities'],
+            'Inventory': ['Inventory', 'Inventories'],
+            'Trade Receivables': ['Trade Receivables', 'Receivables']
         }
         
         # Check for aliases if exact name isn't found
@@ -45,8 +48,7 @@ class FinancialAnalyzer:
         interest = self.safe_get('Interest')
         pbt = self.safe_get('Profit Before Tax')
         
-        # 1. Gross Margin Calculation (Crucial to fix your KeyError)
-        # Attempt to find Gross Profit directly, otherwise calculate from Sales - RM Costs
+        # 1. Gross Margin Calculation
         gross_profit = self.safe_get('Gross Profit')
         if (gross_profit == 0).all():
             rm_costs = self.safe_get('Raw Materials')
@@ -54,14 +56,12 @@ class FinancialAnalyzer:
             
         metrics['Gross Margin %'] = (gross_profit / sales.replace(0, np.nan)) * 100
         
-        # 2. EBITDA Margin (PBT + Depreciation + Interest)
+        # 2. EBITDA Margin
         ebitda = pbt + depreciation + interest
         metrics['EBITDA Margin %'] = (ebitda / sales.replace(0, np.nan)) * 100
-        
-        # 3. Net Margin
         metrics['Net Margin %'] = (net_profit / sales.replace(0, np.nan)) * 100
         
-        # 4. ROE Calculation (Net Profit / Total Equity)
+        # 3. ROE Calculation
         equity_base = self.safe_get('Equity Share Capital') + self.safe_get('Reserves')
         metrics['ROE %'] = (net_profit / equity_base.replace(0, np.nan)) * 100
         
@@ -70,6 +70,7 @@ class FinancialAnalyzer:
     def get_solvency_metrics(self):
         """Calculates Debt-to-Equity and Interest Coverage for Tab 6."""
         solvency = pd.DataFrame(index=self.df.index)
+        solvency['Year'] = self.df['Report Date'] if 'Report Date' in self.df.columns else self.df.index
         
         equity_base = self.safe_get('Equity Share Capital') + self.safe_get('Reserves')
         borrowings = self.safe_get('Borrowings')
@@ -77,24 +78,23 @@ class FinancialAnalyzer:
         interest = self.safe_get('Interest')
 
         solvency['Debt-to-Equity'] = borrowings / equity_base.replace(0, np.nan)
-        # 999 is an institutional shorthand for 'Infinity' (Debt Free companies)
         solvency['Interest Coverage'] = (pbt + interest) / interest.replace(0, np.nan).fillna(999)
         
         return solvency
 
     def get_efficiency_metrics(self):
-    """Calculates Asset Turnover and Working Capital Cycles."""
-    eff = pd.DataFrame(index=self.df.index)
-    eff['Year'] = self.df['Report Date']
-    
-    sales = self.safe_get('Sales')
-    assets = self.safe_get('Total Assets')
-    inventory = self.safe_get('Inventory')
-    debtors = self.safe_get('Trade Receivables')
-    
-    # Ratios
-    eff['Asset Turnover'] = sales / assets.replace(0, np.nan)
-    eff['Inventory Turnover'] = sales / inventory.replace(0, np.nan)
-    eff['Debtor Days'] = (debtors / sales.replace(0, np.nan)) * 365
-    
-    return eff
+        """Calculates Asset Turnover and Working Capital Cycles for Tab 7."""
+        eff = pd.DataFrame(index=self.df.index)
+        eff['Year'] = self.df['Report Date'] if 'Report Date' in self.df.columns else self.df.index
+        
+        sales = self.safe_get('Sales')
+        assets = self.safe_get('Total Assets')
+        inventory = self.safe_get('Inventory')
+        debtors = self.safe_get('Trade Receivables')
+        
+        # Calculation with zero-division protection
+        eff['Asset Turnover'] = sales / assets.replace(0, np.nan)
+        eff['Inventory Turnover'] = sales / inventory.replace(0, np.nan)
+        eff['Debtor Days'] = (debtors / sales.replace(0, np.nan)) * 365
+        
+        return eff
