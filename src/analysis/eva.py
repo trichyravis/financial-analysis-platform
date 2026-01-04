@@ -1,33 +1,39 @@
+
 import pandas as pd
 import numpy as np
 
 class EVAAnalyzer:
-    """Calculates Economic Value Added and Market Value Added."""
-    
-    def __init__(self, df, wacc_default=0.10):
+    def __init__(self, df, wacc=0.12):
         self.df = df
-        self.wacc = wacc_default
+        self.wacc = wacc
 
     def calculate_eva(self):
-        """EVA = NOPAT - (Invested Capital * WACC)"""
-        # 1. Calculate NOPAT (Assuming 25% tax)
-        ebit = self.df['Profit before tax'] + self.df['Interest']
-        nopat = ebit * (1 - 0.25)
+        """Calculates Economic Value Added over historical periods."""
+        eva_df = pd.DataFrame(index=self.df.index)
+        eva_df['Report Date'] = self.df['Report Date']
+
+        # Use standardized Title Case names
+        pbt = self.df.get('Profit Before Tax', 0)
+        interest = self.df.get('Interest', 0)
+        tax_rate = 0.25  # Standard effective tax rate assumption
         
-        # 2. Invested Capital
-        equity = self.df['Equity Share Capital'] + self.df['Reserves']
-        invested_capital = equity + self.df['Borrowings']
+        # NOPAT = EBIT * (1 - Tax)
+        ebit = pbt + interest
+        nopat = ebit * (1 - tax_rate)
         
-        # 3. EVA Calculation
+        # Invested Capital = Equity + Reserves + Borrowings
+        equity = self.df.get('Equity Share Capital', 0) + self.df.get('Reserves', 0)
+        debt = self.df.get('Borrowings', 0)
+        invested_capital = equity + debt
+        
+        # Capital Charge = Invested Capital * WACC
         capital_charge = invested_capital * self.wacc
-        eva = nopat - capital_charge
         
-        results = pd.DataFrame({
-            'Year': self.df['Report Date'],
-            'NOPAT': nopat,
-            'Invested Capital': invested_capital,
-            'Capital Charge': capital_charge,
-            'EVA': eva,
-            'Spread %': (nopat / invested_capital - self.wacc) * 100
-        })
-        return results
+        eva_df['NOPAT'] = nopat
+        eva_df['Capital Charge'] = capital_charge
+        eva_df['EVA'] = nopat - capital_charge
+        
+        # Return on Invested Capital (ROIC)
+        eva_df['ROIC %'] = (nopat / invested_capital.replace(0, np.nan)) * 100
+        
+        return eva_df.set_index('Report Date')
