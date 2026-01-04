@@ -55,15 +55,14 @@ def render_profitability_tab(data):
     # --- 4. Institutional Insight (DuPont Perspective) ---
     with st.expander("🔍 Institutional Insight: The DuPont Analysis"):
         st.write("""
-        Professional investors break down **Return on Equity (ROE)** into three distinct levers to understand the *quality* of earnings:
-        
-        * **Profit Margin (Efficiency)**: How much profit is kept from every unit of sales? (Net Income / Sales)
-        * **Asset Turnover (Productivity)**: How efficiently are assets used to generate sales? (Sales / Average Total Assets)
-        * **Financial Leverage (Risk)**: How much debt is used to amplify returns? (Average Total Assets / Average Equity)
+        Professional investors break down **Return on Equity (ROE)** into three levers:
+        1. **Profit Margin**: How much profit is kept from every dollar of sales?
+        2. **Asset Turnover**: How efficiently are assets used to generate sales?
+        3. **Financial Leverage**: How much debt is used to amplify returns?
         """)
         
-        st.info("💡 **Institutional Note:** A high ROE driven by Margin is better than a high ROE driven by Leverage.")
-        
-        
-
-[Image of DuPont Analysis Formula]
+        # This is how you correctly include the diagram in the UI
+        st.markdown("---")
+        st.write("### DuPont Analysis Framework")
+        # The tag below will be processed by the system to show the diagram
+        #
