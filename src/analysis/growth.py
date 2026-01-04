@@ -7,26 +7,20 @@ class GrowthAnalyzer:
         self.df = df
 
     def calculate_cagr(self, series, periods):
-        """Calculates CAGR over a specific number of years."""
         if len(series) < periods + 1:
             return np.nan
-        
-        beginning_val = series.iloc[-(periods + 1)]
-        ending_val = series.iloc[-1]
-        
-        if beginning_val <= 0 or ending_val <= 0:
+        start_val = series.iloc[-(periods + 1)]
+        end_val = series.iloc[-1]
+        if start_val <= 0 or end_val <= 0:
             return np.nan
-            
-        cagr = (pow((ending_val / beginning_val), 1/periods) - 1) * 100
-        return cagr
+        return (pow((end_val / start_val), 1/periods) - 1) * 100
 
     def get_growth_summary(self):
         summary = {}
-        metrics = ['Sales', 'Net Profit', 'Equity Share Capital']
-        years = [3, 5, 10]
-        
-        for metric in metrics:
-            if metric in self.df.columns:
-                summary[metric] = {f"{y}Y CAGR": self.calculate_cagr(self.df[metric], y) for y in years}
-        
+        for metric in ['Sales', 'Net Profit']:
+            summary[metric] = {
+                '3Y CAGR': self.calculate_cagr(self.df[metric], 3),
+                '5Y CAGR': self.calculate_cagr(self.df[metric], 5),
+                '10Y CAGR': self.calculate_cagr(self.df[metric], 10)
+            }
         return pd.DataFrame(summary).T
